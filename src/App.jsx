@@ -50,7 +50,7 @@ function App() {
 
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected routes */}
+      
         <Route
           path="/"
           element={

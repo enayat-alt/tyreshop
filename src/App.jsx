@@ -45,8 +45,7 @@ function App() {
       <Navbar user={user} setUser={setUser} />
 
       <Routes>
-        {/* Public routes */}
-        {/* <Route path="/login" element={<Login />} /> */}
+        
         <Route path="/login" element={<Login setUser={setUser} />} />
 
         <Route path="/signup" element={<Signup />} />

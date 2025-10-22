@@ -1,81 +1,86 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Navbar from "./Navbar";
 import Cards from "./Components/Cards";
-import About from "./Components/about";
-import Services from "./Components/Services";
-import Login from "./views/Login";
-import Signup from "./views/Signup";
-import Profile from "./Components/Profile";
-import Contact from "./Components/Contact";
-import AddService from './components/AddService';
-import TyreDetails from "./components/TyreDetails";
-import OrderSuccess from "./pages/OrderSuccess";
-import UserOrders from './components/UserOrders';
-import CartPage from './Components/CartPage';
 import Footer from "./Components/Footer";
-import BuyNowPage from './Components/BuyNowPage';
 import PrivateRoute from './Components/PrivateRoute';
 import { CartProvider } from "./context/CartContext";
+import Login from "./views/Login";
+import Signup from "./views/Signup";
+
+// 🔥 Lazy Load Components
+const About = React.lazy(() => import("./Components/about"));
+const Services = React.lazy(() => import("./Components/Services"));
+const Profile = React.lazy(() => import("./Components/Profile"));
+const Contact = React.lazy(() => import("./Components/Contact"));
+const AddService = React.lazy(() => import("./Components/AddService"));
+const TyreDetails = React.lazy(() => import("./Components/TyreDetails"));
+const OrderSuccess = React.lazy(() => import("./pages/OrderSuccess"));
+const UserOrders = React.lazy(() => import("./Components/UserOrders"));
+const CartPage = React.lazy(() => import("./Components/CartPage"));
+const BuyNowPage = React.lazy(() => import("./Components/BuyNowPage"));
 
 function App() {
   const tyres = [
-
-    { id: 1, name: "Michelin Energy XM2", size: "195/65 R15", price: 4500, image: "/tyres/michelin.jpg" }, // ✅ id added
+    { id: 1, name: "Michelin Energy XM2", size: "195/65 R15", price: 4500, image: "/tyres/michelin.jpg" },
     { id: 2, name: "Bridgestone Turanza", size: "205/55 R16", price: 5200, image: "/tyres/bridgestone.jpg" },
     { id: 3, name: "MRF ZLX", size: "185/70 R14", price: 3500, image: "/tyres/mrf.jpg" },
     { id: 4, name: "Michelin Energy XM2", size: "195/65 R15", price: 4500, image: "/tyres/michelin.jpg" },
     { id: 5, name: "Bridgestone Turanza", size: "205/55 R16", price: 5200, image: "/tyres/bridgestone.jpg" },
     { id: 6, name: "MRF ZLX", size: "185/70 R14", price: 3500, image: "/tyres/mrf.jpg" },
   ];
-  const [user, setUser] = useState(null); // this state tracks the logged-in user
 
-  // When app loads, get user from localStorage
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     if (loggedInUser) setUser(loggedInUser);
   }, []);
 
   return (
-     <CartProvider>
-    <Router>
-      <Navbar user={user} setUser={setUser} />
+    <CartProvider>
+      <Router>
+        <Navbar user={user} setUser={setUser} />
 
-      <Routes>
-        
-        <Route path="/login" element={<Login setUser={setUser} />} />
+        {/* 🔄 Suspense Fallback UI while lazy components load */}
+        <Suspense fallback={<div className="text-center mt-10 text-lg">🛞 Loading Tyre Shop...</div>}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login setUser={setUser} />} />
+            <Route path="/signup" element={<Signup />} />
 
-        <Route path="/signup" element={<Signup />} />
+            {/* All Private Routes */}
+            <Route element={<PrivateRoute />}>
+              <Route
+                path="/"
+                element={
+                  <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {tyres.map((tyre, index) => (
+                      <Cards key={index} {...tyre} />
+                    ))}
+                  </div>
+                }
+              />
+              <Route path="/services" element={<Services />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/add-service" element={<AddService />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/buy-now" element={<BuyNowPage />} />
+              <Route path="/my-orders" element={<UserOrders />} />
+              <Route path="/tyre-details" element={<TyreDetails />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/about" element={<About />} />
+            </Route>
 
-      
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {tyres.map((tyre, index) => (
-                  <Cards key={index} {...tyre} />
-                ))}
-              </div>
-            </PrivateRoute>
-          }
-        />
-        <Route path="/services" element={<PrivateRoute><Services /></PrivateRoute>} />
-        <Route path="/contact" element={<PrivateRoute><Contact /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/add-service" element={<PrivateRoute><AddService /></PrivateRoute>} />
-        <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
-        <Route path="/buy-now" element={<PrivateRoute><BuyNowPage /></PrivateRoute>} />
-        <Route path="/my-orders" element={<PrivateRoute><UserOrders /></PrivateRoute>} />
-        <Route path="/tyre-details" element={<PrivateRoute><TyreDetails /></PrivateRoute>} />
-        <Route path="/order-success" element={<PrivateRoute><OrderSuccess /></PrivateRoute>} />
+            {/* 404 Page */}
+            <Route path="*" element={<h2 className="text-center mt-10">404 Page Not Found</h2>} />
+          </Routes>
+        </Suspense>
 
-        <Route path="/about" element={<PrivateRoute><About /></PrivateRoute>} />
-        <Route path="*" element={<h2 className="text-center mt-10">404 Page Not Found</h2>} />
-      </Routes>
-
-      <Footer />
-    </Router>
+        <Footer />
+      </Router>
     </CartProvider>
   );
 }
